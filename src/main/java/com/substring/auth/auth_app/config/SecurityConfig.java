@@ -1,10 +1,14 @@
 package com.substring.auth.auth_app.config;
 
+import com.substring.auth.auth_app.dtos.ApiError;
 import com.substring.auth.auth_app.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
+import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
@@ -65,13 +69,22 @@ public class SecurityConfig {
             e.printStackTrace();
             res.setStatus(401);
             res.setContentType("application/json");
-            String message = "unauthorized access " + e.getMessage();
-            Map<String,String> errMap = Map.of("message",message);
+            String message = e.getMessage();
+            String error = (String) req.getAttribute("error");
+            if(error!=null) {
+                message = error;
+            }
+            //Map<String,Object> errMap = Map.of("message",message,"status code",401) ;
+            var apiError = ApiError.of(HttpStatus.UNAUTHORIZED.value(),"Unauthorized Access",message,req.getRequestURI());
             var objectMapper = new ObjectMapper();
-            res.getWriter().write(objectMapper.writeValueAsString(errMap));
+            res.getWriter().write(objectMapper.writeValueAsString(apiError));
         }));
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+    @Bean
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration configuration) {
+        return configuration.getAuthenticationManager();
     }
 
 }
