@@ -63,6 +63,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(requests -> requests
                 .requestMatchers("/api/v1/auth/login").permitAll()
                 .requestMatchers("/api/v1/auth/register").permitAll()
+                        .requestMatchers("/api/v1/auth/refresh").permitAll()
+                        .requestMatchers("/api/v1/auth/logout").permitAll()
                 .anyRequest().authenticated()
         );
         http.exceptionHandling(ex->ex.authenticationEntryPoint((req,res,e)->{
